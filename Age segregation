@@ -1,0 +1,42 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Sample dataset with age information
+# Replace this with your own dataset containing age information
+data = {
+    'Age': [25, 35, 45, 28, 50, 22, 38, 42, 31, 55],
+    'Group': ['Group1', 'Group2', 'Group3', 'Group1', 'Group3', 'Group1', 'Group2', 'Group3', 'Group2', 'Group3']
+}
+
+df = pd.DataFrame(data)
+
+# Split the data into features (X) and target variable (y)
+X = df[['Age']]
+y = df['Group']
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create a decision tree classifier
+model = DecisionTreeClassifier()
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Make predictions on the test set
+predictions = model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, predictions)
+report = classification_report(y_test, predictions)
+
+print(f"Accuracy: {accuracy}")
+print("Classification Report:\n", report)
+
+# Use the model to predict the group for a new user
+new_user_age = [[33]]  # Replace this with the age of the new user
+predicted_group = model.predict(new_user_age)
+
+print(f"Predicted Group for the new user: {predicted_group[0]}")
