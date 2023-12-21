@@ -1,0 +1,27 @@
+import speech_recognition as sr
+from transformers import pipeline
+
+def recognize_speech(audio_file):
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(audio_file) as source:
+        audio_data = recognizer.record(source)
+    try:
+        text = recognizer.recognize_google(audio_data)
+        return text
+    except sr.UnknownValueError:
+        return None
+    except sr.RequestError as e:
+        return None
+
+def hugging_face_s2t(audio_file):
+    speech_to_text = pipeline(task="automatic-speech-recognition", model="facebook/wav2vec2-base-960h")
+    result = speech_to_text(audio_file)
+    return result[0]['sentence']
+
+# Example usage
+audio_file_path = "path/to/your/audiofile.wav"
+recognized_text_sr = recognize_speech(audio_file_path)
+print(f"Using SpeechRecognition: {recognized_text_sr}")
+
+recognized_text_hf = hugging_face_s2t(audio_file_path)
+print(f"Using Hugging Face Transformers: {recognized_text_hf}")
