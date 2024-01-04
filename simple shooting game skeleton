@@ -1,0 +1,117 @@
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Constants
+WIDTH, HEIGHT = 600, 400
+PLAYER_SIZE = 50
+ENEMY_SIZE = 50
+BULLET_SIZE = 5
+FPS = 60
+
+# Colors
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+
+# Create the screen
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Shooting Game")
+
+# Load images
+player_image = pygame.Surface((PLAYER_SIZE, PLAYER_SIZE))
+player_image.fill(WHITE)
+
+enemy_image = pygame.Surface((ENEMY_SIZE, ENEMY_SIZE))
+enemy_image.fill(RED)
+
+bullet_image = pygame.Surface((BULLET_SIZE, BULLET_SIZE))
+bullet_image.fill(WHITE)
+
+# Game variables
+player_pos = [WIDTH // 2 - PLAYER_SIZE // 2, HEIGHT - PLAYER_SIZE - 10]
+enemy_pos = [random.randint(0, WIDTH - ENEMY_SIZE), 10]
+bullet_list = []
+enemy_speed = 3
+bullet_speed = 7
+player_health = 3
+player_speed = 8
+score = 0
+
+# Clock to control the frame rate
+clock = pygame.time.Clock()
+
+# Function to display player health and score
+def draw_health():
+    font = pygame.font.Font(None, 36)
+    health_text = font.render(f"Health: {player_health}", True, WHITE)
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(health_text, (10, 10))
+    screen.blit(score_text, (10, 50))
+
+# Main game loop
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                bullet_list.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_pos[0] > 0:
+        player_pos[0] -= player_speed
+    if keys[pygame.K_RIGHT] and player_pos[0] < WIDTH - PLAYER_SIZE:
+        player_pos[0] += player_speed
+
+    # Move enemies
+    enemy_pos[1] += enemy_speed
+
+    # Move bullets
+    for bullet in bullet_list:
+        bullet[1] -= bullet_speed
+
+    # Check for collisions
+    for bullet in bullet_list:
+        if (
+            enemy_pos[0] < bullet[0] < enemy_pos[0] + ENEMY_SIZE
+            and enemy_pos[1] < bullet[1] < enemy_pos[1] + ENEMY_SIZE
+        ):
+            enemy_pos = [random.randint(0, WIDTH - ENEMY_SIZE), 10]
+            bullet_list.remove(bullet)
+            score += 1
+
+    # Check if player missed an enemy
+    if enemy_pos[1] > HEIGHT:
+        player_health -= 1
+        enemy_pos = [random.randint(0, WIDTH - ENEMY_SIZE), 10]
+
+    # Check if player's health is zero
+    if player_health <= 0:
+        print("Game Over! Your score:", score)
+        pygame.quit()
+        sys.exit()
+
+    # Increase enemy speed after every 50 points
+    if score % 50 == 0 and score > 0:
+        enemy_speed += 1
+
+    # Draw everything
+    screen.fill((0, 0, 0))
+    screen.blit(player_image, (player_pos[0], player_pos[1]))
+    screen.blit(enemy_image, (enemy_pos[0], enemy_pos[1]))
+
+    for bullet in bullet_list:
+        screen.blit(bullet_image, (bullet[0], bullet[1]))
+
+    draw_health()
+
+    # Update the display
+    pygame.display.flip()
+
+    # Set the frame rate
+    clock.tick(FPS)
