@@ -1,0 +1,64 @@
+pip install tensorflow opencv-python
+import os
+import cv2
+import numpy as np
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+from tensorflow.keras import layers, models
+def preprocess_data(img_path, label):
+    img = cv2.imread(img_path)
+    img = cv2.resize(img, (128, 128))  # Resize the image to a common size
+    img = img / 255.0  # Normalize pixel values to the range [0, 1]
+    return img, label
+
+data = []
+labels = []
+
+# Change the dataset path accordingly
+cat_path = 'path/to/cat/images'
+non_cat_path = 'path/to/non-cat/images'
+
+# Load cat images
+for cat_img in os.listdir(cat_path):
+    img_path = os.path.join(cat_path, cat_img)
+    img, label = preprocess_data(img_path, 1)  # 1 represents cat
+    data.append(img)
+    labels.append(label)
+
+# Load non-cat images
+for non_cat_img in os.listdir(non_cat_path):
+    img_path = os.path.join(non_cat_path, non_cat_img)
+    img, label = preprocess_data(img_path, 0)  # 0 represents non-cat
+    data.append(img)
+    labels.append(label)
+
+data = np.array(data)
+labels = np.array(labels)
+
+# Split the dataset into training and testing sets
+train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, random_state=42)
+model = models.Sequential()
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(128, 128, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Flatten())
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(1, activation='sigmoid'))
+
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+model.summary()
+model.fit(train_data, train_labels, epochs=10, validation_split=0.2)
+test_loss, test_acc = model.evaluate(test_data, test_labels)
+print(f'Test Accuracy: {test_acc}')
+# Assuming `new_image` is the image you want to classify
+new_image = cv2.imread('path/to/new/image.jpg')
+new_image = cv2.resize(new_image, (128, 128))
+new_image = new_image / 255.0
+prediction = model.predict(np.array([new_image]))
+
+if prediction[0][0] > 0.5:
+    print('It is a cat!')
+else:
+    print('It is not a cat.')
